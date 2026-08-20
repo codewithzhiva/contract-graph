@@ -1,0 +1,16 @@
+services:
+  control:
+    build: ./control
+    volumes: [contract-data:/data]
+    ports: ["8000:8000"]
+    healthcheck: {test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/readyz')"], interval: 5s, timeout: 2s, retries: 10}
+  collector:
+    build: ./collector
+    environment: {CONTROL_PLANE_URL: "http://control:8000"}
+    ports: ["4318:4318"]
+    depends_on: {control: {condition: service_healthy}}
+  web:
+    build: ./web
+    ports: ["8080:80"]
+    depends_on: [control]
+volumes: {contract-data: {}}
